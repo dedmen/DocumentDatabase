@@ -1,0 +1,83 @@
+﻿<Window xmlns:PdfViewer="clr-namespace:Syncfusion.Windows.PdfViewer;assembly=Syncfusion.PdfViewer.WPF"  x:Class="DocumentDatabase.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DocumentDatabase"
+        xmlns:wpfTagControl="clr-namespace:WPFTagControl;assembly=WPFTagControl"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800" AllowDrop="true"  Drop="UIElement_OnDrop" x:Name="Window">
+    <Grid AllowDrop="true" Drop="UIElement_OnDrop">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel AllowDrop="true" Drop="UIElement_OnDrop" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <TextBox KeyDown="UIElement_OnKeyDown" x:Name="searchBox"/>
+
+            <ListBox x:Name="DocumentsList" ItemsSource="{Binding DocumentCollection, ElementName=Window}" SelectionChanged="Selector_OnSelectionChanged" SelectionMode="Single">
+                <!--<ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="BGBorder" Background="Green">
+                            <Label Content="{Binding Name}"/>
+                        </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger  Binding="{Binding Path=SearchHit, RelativeSource={RelativeSource TemplatedParent}}" Value="true">
+                                <Setter Property="Background" TargetName="BGBorder" Value="Red"></Setter>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>-->
+
+                <ListBox.Resources>
+                    <DataTemplate DataType="{x:Type local:DocumentInfo}">
+                        <Border x:Name="BGBorder" Background="Green">
+                            <Label Content="{Binding Title}"/>
+                        </Border>
+                    </DataTemplate>
+                    <Style TargetType="ListBoxItem">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=SearchHit}" Value="True">
+                                <Setter Property="Background" Value="Red" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Path=SearchHit}" Value="False">
+                                <Setter Property="Background"  Value="Green" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.Resources>
+            </ListBox>
+        </StackPanel>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <wpfTagControl:TagControl Grid.Row="0" 
+                x:Name="TagControl"
+                TagAdded="TagControl_OnTagAdded"
+                SelectedTags="{Binding SelectedTags, ElementName=Window}"
+                SuggestedTags="{Binding SuggestedTags, ElementName=Window}"
+            />  
+
+
+            <PdfViewer:PdfViewerControl Grid.Row="1" 
+                                        x:Name="DocumentView"
+                                        IsManipulationEnabled="False" 
+                                        EnableRedactionTool="False" 
+                                        EnableNotificationBar="False" 
+                                        ShowToolbar="True"
+            >
+                <PdfViewer:PdfViewerControl.HighlightAnnotationSettings>
+                    <PdfViewer:PdfViewerHighlightSettings HighlightColor="Red"/>
+                </PdfViewer:PdfViewerControl.HighlightAnnotationSettings>
+            </PdfViewer:PdfViewerControl>
+        </Grid>
+
+
+    </Grid>
+</Window>
