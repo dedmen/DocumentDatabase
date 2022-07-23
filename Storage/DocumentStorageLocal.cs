@@ -25,7 +25,7 @@ namespace DocumentDatabase.Storage
         {
             try
             {
-                System.IO.File.Copy(sourceFileName, $"{_localDirectory}/{System.IO.Path.GetFileName(sourceFileName)}");
+                System.IO.File.Copy(sourceFileName, $"{_localDirectory}/{System.IO.Path.GetFileName(sourceFileName)}", true);
             }
             catch (System.IO.IOException ex)
             {

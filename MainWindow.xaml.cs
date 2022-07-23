@@ -8,9 +8,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using DocumentDatabase.BackgroundTasks;
 using DocumentDatabase.Storage;
 using DocumentDatabase.UI;
 using Examine;
+using Lucene.Net.Linq.Util;
+using Lucene.Net.Util;
 using Microsoft.EntityFrameworkCore;
 using PropertyChanged;
 using Syncfusion.OCRProcessor;
@@ -70,68 +73,67 @@ namespace DocumentDatabase
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 // Note that you can have more than one file.
-                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                string[] files = (e.Data.GetData(DataFormats.FileDrop) as string[]) ?? Array.Empty<string>();
 
-                // Assuming you have one file that you care about, pass it off to whatever
-                // handling code you have defined.
-                foreach (var file in files)
+                if (files.Length > 1)
                 {
-                    Task.Run(() => HandleFileOpen(file)).ContinueWith(x =>
+                    //#TODO filter pdf only
+                    var results = files.Select(file => Task.Run(() => HandleFileOpen(file)));
+                    Task.WhenAll(results).ContinueWith(x =>
                     {
-                        if (x.Result == null)
-                            return;
-                        var newWindow = new WindowAddDocument(x.Result);
+                        var newWindow = new WindowAddDocumentMulti(x.Result);
                         newWindow.Show();
                     }, TaskScheduler.FromCurrentSynchronizationContext());
                 }
+                else
+                {
+                    foreach (var file in files)
+                    {
+                        Task.Run(() => HandleFileOpen(file)).ContinueWith(async x =>
+                        {
+                            await x.Result.OCRConversionTask; // Wait till OCR is done before we open
+                            //#TODO handle it inside the window as part of the CanAdd
+                            var newWindow = new WindowAddDocument(x.Result);
+                            newWindow.Show();
+                        }, TaskScheduler.FromCurrentSynchronizationContext());
+                    }
+                }
+              
             }
         }
         private async Task<PdfCreationInfo> HandleFileOpen(string file)
         {
-            //Initialize the OCR processor with tesseract binaries folder path
-            using (OCRProcessor processor = new OCRProcessor(@"TesseractBinaries/Windows"))
+            var documentUniqueName = Guid.NewGuid().ToString("N");
+
+            var result = new PdfCreationInfo
             {
-                var documentUniqueName = Guid.NewGuid().ToString("N");
+                InputFilePath = file,
+                UniqueName = documentUniqueName
+            };
 
-                //Load a PDF document
-                using FileStream stream = new FileStream(file, FileMode.Open);
-                var document = new syncPdfPortable::Syncfusion.Pdf.Parsing.PdfLoadedDocument(stream);
-                
-                //Set OCR language
-                processor.Settings.Language = Languages.English;
-                processor.Settings.Language = "nld";
-                processor.Settings.PageSegment = PageSegMode.AutoOsd; // autorotate
-                processor.Settings.TempFolder = "P:/";
-
-                //Perform OCR with input document and tessdata (Language packs)
-                processor.PerformOCR(document, @"tessdata\");
-                
-                //Save the document into stream.
+            //#TODO let user set language
+            var conversionTask = TaskPDF_OCR.FromFile(file).WithLanguage(TaskPDF_OCR.Languages.Dutch).Run_GetStream().ContinueWith(x =>
+            {
+                //Save the document into file.
                 {
                     using FileStream outStream = new FileStream($"P:/{documentUniqueName}.pdf", FileMode.CreateNew);
-                    document.Save(outStream);
+                    x.Result.ParsedDocument.WriteTo(outStream);
+                    x.Result.ParsedDocument.Close();
+                    x.Result.ParsedDocument.Dispose();
+                    result.DocumentPath = $"P:/{documentUniqueName}.pdf";
+                    result.BodyText = x.Result.BodyText;
                 }
+            });
 
-                string text = "";
-                
-                foreach (syncPdfPortable::Syncfusion.Pdf.PdfPageBase documentPage in document.Pages)
-                {
-                    text += documentPage.ExtractText();
-                }
+            result.OCRConversionTask = conversionTask;
+            return result;
 
-                //Close the document. 
-                document.Close(true);
-
-                return new PdfCreationInfo
-                {
-                    UniqueName = documentUniqueName,
-                    DocumentPath = $"P:/{documentUniqueName}.pdf",
-                    BodyText = text
-                };
-            }
         }
         private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+
+            if (e.AddedItems.Count == 0) return;
+
             var x = e.AddedItems[0] as DocumentInfo;
             var db = DependencyInjection.GetService<DatabaseContext>();
 
@@ -161,9 +163,11 @@ namespace DocumentDatabase
                 var index = manager.Indexes.First();
                 var results = index.Searcher.Search(searchBox.Text);
 
-                var id = results.First().Id;
-                var res = results.First();
-                var res2 = results.First().GetValues("nodeName").ToArray();
+                //var id = results.FirstOrDefault()?.Id;
+                //var res = results.First();
+                //var res2 = results.First().GetValues("nodeName").ToArray();
+
+                DocumentCollection.Apply(x => x.SearchHit = false);
 
                 foreach (var searchResult in results)
                 {
@@ -174,6 +178,7 @@ namespace DocumentDatabase
                     }
                 }
 
+                DocumentCollection.Sort((x,y) => y.SearchHit.CompareTo(x.SearchHit));
 
             }
         }
@@ -186,4 +191,6 @@ namespace DocumentDatabase
             db.SaveChanges();
         }
     }
+
+  //  https://developpaper.com/using-lucene-net-to-do-a-simple-search-engine-full-text-index/
 }

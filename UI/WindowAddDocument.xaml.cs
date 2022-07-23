@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using DocumentDatabase.Storage;
+using DocumentDatabase.Util;
 using Examine;
 using PropertyChanged;
 using Syncfusion.Windows.Shared;
@@ -23,9 +24,11 @@ namespace DocumentDatabase.UI
 {
     public class PdfCreationInfo
     {
+        public string InputFilePath { get; set; }
         public string DocumentPath { get; set; }
         public string BodyText { get; set; }
         public string UniqueName { get; set; }
+        public Task OCRConversionTask { get; set; }
     }
 
 

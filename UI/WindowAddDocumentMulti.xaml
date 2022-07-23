@@ -1,0 +1,126 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:pdfViewer="clr-namespace:Syncfusion.Windows.PdfViewer;assembly=Syncfusion.PdfViewer.WPF"
+        xmlns:syncfusion="http://schemas.syncfusion.com/wpf"
+        xmlns:wpfTagControl="clr-namespace:WPFTagControl;assembly=WPFTagControl"
+        xmlns:util="clr-namespace:DocumentDatabase.Util"
+        x:Class="DocumentDatabase.UI.WindowAddDocumentMulti"
+        mc:Ignorable="d"
+        Title="WindowAddDocument" Height="720" Width="1280" x:Name="Window">
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <ListView 
+            Grid.Row="0" 
+            ItemsSource="{Binding Documents, ElementName=Window}"
+            SelectionChanged="ListDocuments_OnSelectionChanged" 
+            SelectionMode="Single"
+            util:ListViewStarSizingAttachedBehavior.UseGridLength_Width="True"
+            >
+            
+            <!-- Auto stretch content inside columns to match column width-->
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.View>
+
+                <GridView>
+                    <GridViewColumn Header="InputFilename" util:ColumnAttachedProperties.GridLength_Width="180" DisplayMemberBinding="{Binding InputFilename}"/>
+                    <GridViewColumn Header="OCR" util:ColumnAttachedProperties.GridLength_Width="40">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <RadioButton IsThreeState="True" IsChecked="{Binding OCRProcessState}" IsHitTestVisible="False" HorizontalAlignment="Center" >
+                                    <!-- Visualize the OCR processing state as a colored radio button -->
+                                    <RadioButton.Style>
+                                        <Style TargetType="{x:Type RadioButton}" >
+                                            <Style.Setters>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="RadioButton">
+                                                            <RadioButton Background="{TemplateBinding Foreground}" />
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsChecked" Value="False">
+                                                                    <Setter Property="Foreground" Value="Red" />
+                                                                </Trigger>
+                                                                <Trigger Property="IsChecked" Value="{x:Null}">
+                                                                    <Setter Property="Foreground" Value="Yellow" />
+                                                                </Trigger>
+                                                                <Trigger Property="IsChecked" Value="True">
+                                                                    <Setter Property="Foreground" Value="Green" />
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style.Setters>
+                                        </Style>
+                                    </RadioButton.Style>
+
+                                </RadioButton>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Document Title" util:ColumnAttachedProperties.GridLength_Width="*" util:ColumnAttachedProperties.GridLength_MinWidth="120" >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox x:Name="DocumentTitle" TextAlignment="Left" TextWrapping="NoWrap" Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" TextChanged="DocumentTitle_OnTextChanged"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Date" util:ColumnAttachedProperties.GridLength_Width="150">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <syncfusion:DateTimeEdit x:Name="DocumentDate" DateTime="{Binding Date}" DateTimeChanged="DocumentDate_OnDateTimeChanged"/>
+                                <!--DateTime="2020-01-01"-->
+
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Tags" util:ColumnAttachedProperties.GridLength_Width="*" util:ColumnAttachedProperties.GridLength_MinWidth="120">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <wpfTagControl:TagControl 
+                                    x:Name="TagControl"
+                                    TagAdded="TagControl_OnTagAdded"
+                                    SelectedTags="{Binding SelectedTags}"
+                                    SuggestedTags="{Binding SuggestedTags, ElementName=Window}"
+                                />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Submit" util:ColumnAttachedProperties.GridLength_Width="110">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Content="Add Document" Click="ButtonSubmit_OnClick" IsEnabled="{Binding CanAdd}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <GridSplitter Grid.Row="0" Margin="0"
+                      Height="10" Width="Auto" Background="Purple" 
+                      VerticalAlignment="Bottom" 
+                      HorizontalAlignment="Stretch" />
+
+        <pdfViewer:PdfViewerControl Grid.Row="1" x:Name="DocumentView" IsManipulationEnabled="False" EnableRedactionTool="False" EnableNotificationBar="False" ShowToolbar="True">
+            <pdfViewer:PdfViewerControl.HighlightAnnotationSettings>
+                <pdfViewer:PdfViewerHighlightSettings HighlightColor="Red"/>
+            </pdfViewer:PdfViewerControl.HighlightAnnotationSettings>
+        </pdfViewer:PdfViewerControl>
+
+    </Grid>
+</Window>

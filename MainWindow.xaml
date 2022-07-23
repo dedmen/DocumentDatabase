@@ -14,10 +14,16 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel AllowDrop="true" Drop="UIElement_OnDrop" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <TextBox KeyDown="UIElement_OnKeyDown" x:Name="searchBox"/>
+        <Grid AllowDrop="true" Drop="UIElement_OnDrop" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
-            <ListBox x:Name="DocumentsList" ItemsSource="{Binding DocumentCollection, ElementName=Window}" SelectionChanged="Selector_OnSelectionChanged" SelectionMode="Single">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBox Grid.Row="0" KeyDown="UIElement_OnKeyDown" x:Name="searchBox"/>
+
+            <ListBox Grid.Row="1" x:Name="DocumentsList" ItemsSource="{Binding DocumentCollection, ElementName=Window}" SelectionChanged="Selector_OnSelectionChanged" SelectionMode="Single">
                 <!--<ListBox.ItemTemplate>
                     <DataTemplate>
                         <Border x:Name="BGBorder" Background="Green">
@@ -33,7 +39,7 @@
 
                 <ListBox.Resources>
                     <DataTemplate DataType="{x:Type local:DocumentInfo}">
-                        <Border x:Name="BGBorder" Background="Green">
+                        <Border x:Name="BGBorder" Background="Transparent">
                             <Label Content="{Binding Title}"/>
                         </Border>
                     </DataTemplate>
@@ -43,13 +49,13 @@
                                 <Setter Property="Background" Value="Red" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Path=SearchHit}" Value="False">
-                                <Setter Property="Background"  Value="Green" />
+                                <Setter Property="Background"  Value="Transparent" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </ListBox.Resources>
             </ListBox>
-        </StackPanel>
+        </Grid>
 
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>

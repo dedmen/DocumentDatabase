@@ -28,6 +28,19 @@
     <PackageReference Include="ZstdNet" Version="1.4.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="UI\WindowAddDocumentMulti.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="UI\WindowAddDocumentMulti.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+
 <Target Name="ChangeAliasesOfStrongNameAssemblies" BeforeTargets="FindReferenceAssembliesForReferences;ResolveReferences">
     <ItemGroup>
       <ReferencePath Condition="'%(FileName)' == 'Syncfusion.Pdf.Portable'">

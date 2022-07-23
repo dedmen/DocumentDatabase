@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using DocumentDatabase.Storage;
 using Examine;
+using Lucene.Net.Analysis.Standard;
+using Lucene.Net.Util;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -21,7 +23,7 @@ namespace DocumentDatabase
             _serviceCollection = new ServiceCollection();
 
             _serviceCollection.AddExamine();
-            _serviceCollection.AddExamineLuceneIndex("MyIndex");
+            _serviceCollection.AddExamineLuceneIndex("MyIndex", null, new ClassicAnalyzer(LuceneVersion.LUCENE_48));
             _serviceCollection.AddOptions();
             _serviceCollection.AddTransient<Examine.Lucene.LuceneDirectoryIndexOptions>();
             var fac = new LoggerFactory();

@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ZstdNet;
 
-namespace DocumentDatabase
+namespace DocumentDatabase.Util
 {
 
     public class CompressedDBString
@@ -34,7 +34,7 @@ namespace DocumentDatabase
             builder
                 .HasConversion(
                     v => Zip(v.Data),
-                    v => new CompressedDBString{Data = Unzip(v) }).UsePropertyAccessMode(PropertyAccessMode.Property);
+                    v => new CompressedDBString { Data = Unzip(v) }).UsePropertyAccessMode(PropertyAccessMode.Property);
 
         }
 
@@ -57,7 +57,7 @@ namespace DocumentDatabase
             using (var msi = new MemoryStream(bytes))
             using (var mso = new MemoryStream())
             {
-                using (var gs = new ZstdNet.CompressionStream(mso, CompressionOptions.MaxCompressionLevel))
+                using (var gs = new CompressionStream(mso, CompressionOptions.MaxCompressionLevel))
                 {
                     CopyTo(msi, gs);
                 }
@@ -71,7 +71,7 @@ namespace DocumentDatabase
             using (var msi = new MemoryStream(bytes))
             using (var mso = new MemoryStream())
             {
-                using (var gs = new ZstdNet.DecompressionStream(msi, CompressionOptions.MaxCompressionLevel))
+                using (var gs = new DecompressionStream(msi, CompressionOptions.MaxCompressionLevel))
                 {
                     //gs.CopyTo(mso);
                     CopyTo(gs, mso);
