@@ -70,6 +70,8 @@ namespace DocumentDatabase
 
         private void UIElement_OnDrop(object sender, DragEventArgs e)
         {
+            if (sender is not MainWindow) return;
+
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 // Note that you can have more than one file.
@@ -114,14 +116,10 @@ namespace DocumentDatabase
             //#TODO let user set language
             var conversionTask = TaskPDF_OCR.FromFile(file).WithLanguage(TaskPDF_OCR.Languages.Dutch).Run_GetStream().ContinueWith(x =>
             {
-                //Save the document into file.
                 {
-                    using FileStream outStream = new FileStream($"P:/{documentUniqueName}.pdf", FileMode.CreateNew);
-                    x.Result.ParsedDocument.WriteTo(outStream);
-                    x.Result.ParsedDocument.Close();
-                    x.Result.ParsedDocument.Dispose();
-                    result.DocumentPath = $"P:/{documentUniqueName}.pdf";
                     result.BodyText = x.Result.BodyText;
+                    result.OCRDocumentStream = x.Result.ParsedDocument; // Taking ownership of the stream
+                    //#TODO we need to handle the WindowAddDocument closing before OCR is done and passes the stream
                 }
             });
 
@@ -147,7 +145,7 @@ namespace DocumentDatabase
             //SelectedTags.Clear();
             //SelectedTags.AddRange(x.Tags.Select(x => x.TagName));
             var docStorage = DependencyInjection.GetService<IDocumentStorage>();
-            DocumentView.Load(docStorage.GetFileOpenablePath(x.Id)); //#TODO document stream instead https://help.syncfusion.com/wpf/pdf-viewer/getting-started
+            DocumentView.Load(docStorage.GetFileOpenablePath($"{x.Id}.pdf")); //#TODO document stream instead https://help.syncfusion.com/wpf/pdf-viewer/getting-started
 
             if (x.SearchHit)
                 DocumentView.SearchText(searchBox.Text);
@@ -157,8 +155,6 @@ namespace DocumentDatabase
         {
             if (e.Key == Key.Enter)
             {
-
-
                 var manager = DependencyInjection.GetService<IExamineManager>();
                 var index = manager.Indexes.First();
                 var results = index.Searcher.Search(searchBox.Text);

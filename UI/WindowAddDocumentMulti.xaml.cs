@@ -18,6 +18,7 @@ using DocumentDatabase.Storage;
 using DocumentDatabase.Util;
 using Examine;
 using PropertyChanged;
+using Syncfusion.Pdf;
 using Syncfusion.Windows.Shared;
 using WPFTagControl;
 
@@ -41,7 +42,10 @@ namespace DocumentDatabase.UI
             public bool? OCRProcessState { get; set; } = false;
 
             [OnChangedMethod(nameof(UpdateCanAdd))]
-            public string Title { get; set; } = "test";
+            public string Title { get; set; }
+#if DEBUG
+                = "test";
+#endif
 
             public bool CanAdd { get; set; }
 
@@ -89,6 +93,16 @@ namespace DocumentDatabase.UI
             }
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+
+            foreach (var pdfCreationInfo in Documents)
+            {
+                pdfCreationInfo.PdfCreationInfo.OCRDocumentStream.Dispose();
+            }
+        }
+
         private void ButtonSubmit_OnClick(object sender, RoutedEventArgs e)
         {
             //#TODO Copy document to storage path
@@ -96,8 +110,8 @@ namespace DocumentDatabase.UI
             var document = (e.Source as FrameworkElement)?.DataContext as PDFDocumentInternal;
             if (document == null) return;
 
-            //var docStorage = DependencyInjection.GetService<IDocumentStorage>();
-            //docStorage.AddFile(document.PdfCreationInfo.DocumentPath); //#TODO don't write to disk, pass stream
+            var docStorage = DependencyInjection.GetService<IDocumentStorage>();
+            docStorage.AddFile(document.PdfCreationInfo.OCRDocumentStream, $"{document.PdfCreationInfo.UniqueName}.pdf");
 
             var db = DependencyInjection.GetService<DatabaseContext>();
             Debug.Assert(!document.PdfCreationInfo.BodyText.IsNullOrWhiteSpace());
@@ -159,8 +173,11 @@ namespace DocumentDatabase.UI
 
         private void ListDocuments_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count > 0)
-                DocumentView.Load((e.AddedItems[0] as PDFDocumentInternal)?.PdfCreationInfo.DocumentPath);
+            if (e.AddedItems.Count <= 0) return;
+
+            var document = (e.AddedItems[0] as PDFDocumentInternal);
+            if (document?.PdfCreationInfo.OCRDocumentStream != null)
+                DocumentView.Load(document.PdfCreationInfo.OCRDocumentStream);
         }
     }
 }

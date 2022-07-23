@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,10 +26,11 @@ namespace DocumentDatabase.UI
     public class PdfCreationInfo
     {
         public string InputFilePath { get; set; }
-        public string DocumentPath { get; set; }
+        //public string DocumentPath { get; set; }
         public string BodyText { get; set; }
         public string UniqueName { get; set; }
         public Task OCRConversionTask { get; set; }
+        public Stream OCRDocumentStream { get; set; }
     }
 
 
@@ -54,10 +56,17 @@ namespace DocumentDatabase.UI
             InitializeComponent();
 
             Debug.Assert(_pdfCreationInfo != null, nameof(_pdfCreationInfo) + " != null");
-            DocumentView.Load(_pdfCreationInfo.DocumentPath);
+            DocumentView.Load(_pdfCreationInfo.OCRDocumentStream);
 
             var db = DependencyInjection.GetService<DatabaseContext>();
             TagControl.SuggestedTags = db.DocumentTags.Select(x => x.TagName).ToList();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+
+            _pdfCreationInfo.OCRDocumentStream.Dispose();
         }
 
         private void ButtonSubmit_OnClick(object sender, RoutedEventArgs e)
@@ -65,9 +74,12 @@ namespace DocumentDatabase.UI
             //#TODO Copy document to storage path
 
             var docStorage = DependencyInjection.GetService<IDocumentStorage>();
-            docStorage.AddFile(_pdfCreationInfo.DocumentPath);
+            docStorage.AddFile(_pdfCreationInfo.OCRDocumentStream, $"{_pdfCreationInfo.UniqueName}.pdf");
+
+            //#TODO this is mostly duplicated in WindowAddDocumentMulti, fix that
 
             var db = DependencyInjection.GetService<DatabaseContext>();
+            Debug.Assert(!_pdfCreationInfo.BodyText.IsNullOrWhiteSpace());
             db.Documents.Add(new DocumentInfo
             {
                 Id = _pdfCreationInfo.UniqueName,

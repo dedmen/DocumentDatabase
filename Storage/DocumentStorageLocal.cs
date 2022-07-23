@@ -16,9 +16,9 @@ namespace DocumentDatabase.Storage
             _localDirectory = localDirectory;
         }
 
-        public string GetFileOpenablePath(string fileId)
+        public string GetFileOpenablePath(string fileName)
         {
-            return $"{_localDirectory}/{fileId}.pdf";
+            return $"{_localDirectory}{System.IO.Path.DirectorySeparatorChar}{fileName}";
         }
 
         public void AddFile(string sourceFileName)
@@ -31,9 +31,12 @@ namespace DocumentDatabase.Storage
             {
                 // Hope this is "already exists" error
             }
-            
         }
 
-
+        public void AddFile(Stream fileContents, string fileName)
+        {
+            using FileStream outStream = new FileStream(GetFileOpenablePath(fileName), FileMode.CreateNew);
+            fileContents.CopyTo(outStream);
+        }
     }
 }

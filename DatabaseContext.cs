@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using DocumentDatabase.Annotations;
+using DocumentDatabase.Storage;
 using DocumentDatabase.Util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -51,7 +52,8 @@ namespace DocumentDatabase
 
         public DatabaseContext()
         {
-            DbPath = $"documentDatabase.db";
+            var docStorage = DependencyInjection.GetService<IDocumentStorage>();
+            DbPath = docStorage.GetFileOpenablePath("documentDatabase.db");
             Database.EnsureCreated();
         }
 

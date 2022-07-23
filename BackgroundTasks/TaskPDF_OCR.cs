@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using DocumentDatabase.BackgroundTasks;
+using DocumentDatabase.Storage;
 
 namespace DocumentDatabase.BackgroundTasks
 {
@@ -103,7 +104,16 @@ namespace DocumentDatabase.BackgroundTasks
             //Set OCR language
             processor.Settings.Language = language;
             processor.Settings.PageSegment = PageSegMode.AutoOsd; // autorotate
-            processor.Settings.TempFolder = "P:/";
+
+            var docStorage = DependencyInjection.GetService<IDocumentStorage>();
+            var tempDirPath = docStorage.GetFileOpenablePath("tempdir"); //#TODO move this to a real temp thing, this may be network storage
+            if (!System.IO.Path.EndsInDirectorySeparator(tempDirPath))
+                tempDirPath += System.IO.Path.DirectorySeparatorChar;
+            if (!System.IO.Directory.Exists(tempDirPath))
+                System.IO.Directory.CreateDirectory(tempDirPath);
+
+            processor.Settings.TempFolder = tempDirPath;
+
 
             await EnsureLanguagePresent(language);
 
