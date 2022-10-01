@@ -14,6 +14,7 @@ using DocumentDatabase.Storage;
 using DocumentDatabase.Util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Design;
 
 namespace DocumentDatabase
 {
@@ -50,11 +51,13 @@ namespace DocumentDatabase
 
         public string DbPath { get; }
 
-        public DatabaseContext()
+        public DatabaseContext(bool noInit = false)
         {
-            var docStorage = DependencyInjection.GetService<IDocumentStorage>();
-            DbPath = docStorage.GetFileOpenablePath("documentDatabase.db");
-            Database.EnsureCreated();
+            if (!noInit)
+            {
+                var docStorage = DependencyInjection.GetService<IDocumentStorage>();
+                DbPath = docStorage.GetFileOpenablePath("documentDatabase.db");
+            }
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options) => options.UseSqlite($"Data Source={DbPath}");
@@ -76,6 +79,16 @@ namespace DocumentDatabase
             tag.HasIndex(x => x.TagName).IsUnique();
             tag.HasKey(x => x.Id);
 
+        }
+    }
+
+    public class BloggingContextFactory : IDesignTimeDbContextFactory<DatabaseContext>
+    {
+        public DatabaseContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
+            var ctx = new DatabaseContext(true);
+            return ctx;
         }
     }
 

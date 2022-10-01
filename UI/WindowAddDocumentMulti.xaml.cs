@@ -25,7 +25,7 @@ using WPFTagControl;
 namespace DocumentDatabase.UI
 {
 
-    [AddINotifyPropertyChangedInterface]
+    //[AddINotifyPropertyChangedInterface]
     public partial class WindowAddDocumentMulti : Window
     {
 

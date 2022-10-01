@@ -41,7 +41,7 @@ namespace DocumentDatabase.UI
         public string BodyText { get; set; }
     }
 
-    [AddINotifyPropertyChangedInterface]
+    //[AddINotifyPropertyChangedInterface]
     public partial class WindowAddDocument : Window
     {
         private readonly PdfCreationInfo _pdfCreationInfo;
