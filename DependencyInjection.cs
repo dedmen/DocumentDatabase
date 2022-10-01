@@ -9,6 +9,7 @@ using DocumentDatabase.Storage;
 using Examine;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Util;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -52,8 +53,13 @@ namespace DocumentDatabase
             var fac = new LoggerFactory();
             fac.AddProvider(new DebugLoggerProvider());
             _serviceCollection.AddSingleton<ILoggerFactory>(fac);
-            _serviceCollection.AddSingleton<DatabaseContext>();
-           
+            _serviceCollection.AddSingleton<DatabaseContext>(provider =>
+            {
+                DatabaseContext ctx = new DatabaseContext();
+                ctx.Database.Migrate();
+                ctx.SaveChanges();
+                return ctx;
+            });
 
             ServiceProvider = _serviceCollection.BuildServiceProvider();
         }

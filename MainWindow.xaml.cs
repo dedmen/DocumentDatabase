@@ -23,7 +23,7 @@ namespace DocumentDatabase
 {
 
 
-    [AddINotifyPropertyChangedInterface]
+    //[AddINotifyPropertyChangedInterface]
     public partial class MainWindow : Window
     {
         public DatabaseContext db { get; set; }
